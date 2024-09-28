@@ -1,113 +1,174 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import '@/styles/booleans.css'
+import Header from "@/components/header/Header";
+import Main from "@/components/main/Main";
+import Form from "@/components/form/Form";
+import Input from "@/components/input/Input";
+import AlertMessage from "@/components/alert_message/AlertMessage";
+import SubmitButton from "@/components/submit_button/SubmitButton";
+import Checkmark from "@/components/checkmark/Checkmark";
+import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
+import Api from "@/api/Api";
+
+interface userInformations {
+  userID: string,
+  name: string,
+  email: string,
+  token: string,
+};
+
+function cleanSessionStorage(){
+  sessionStorage.setItem("userID", "");
+  sessionStorage.setItem("name", "");
+  sessionStorage.setItem("email", "");
+  sessionStorage.setItem("token", "");
+};
+
+function setSessionStorage(userID: userInformations, name: userInformations, email: userInformations, token: userInformations){
+  sessionStorage.setItem("userID", `${userID}`);
+  sessionStorage.setItem("name", `${name}`);
+  sessionStorage.setItem("email", `${email}`);
+  sessionStorage.setItem("token", `${token}`);
+};
+
+export default function Index() {
+  const [isloding, setIsLoading] = useState<boolean>(false);
+  const [wellcome, setWellcome] = useState<boolean>(false);
+  const [loginEmail, setLoginEmail] = useState<string>('');
+  const [loginPassword, setLoginPassword] = useState<string>('')
+  const [signUpForm, setSignUpForm] = useState<boolean>(false);
+  const [signUpName, setSignUpName] = useState<string>('')
+  const [signUpEmail, setSignUpEmail] = useState<string>('')
+  const [signUpPassword, setSignUpPassword] = useState<string>('')
+  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState<string>('')
+  const [errorType, setErrorType] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('')
+  const [userName, setUserName] = useState<string>('')
+
+  const router = useRouter();
+
+  const login = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    Api.post('/login', {
+      email: loginEmail,
+      password: loginPassword
+    }).then(resp => {
+      setSessionStorage(resp.data.userID, resp.data.name, resp.data.email, resp.data.token);
+      setUserName(resp.data.name)
+      setIsLoading(true);
+      setTimeout(() => {
+        router.push('/my_notes');
+      }, 1500);
+    }).catch(error => {
+      setErrorType(error.response.data.type);
+      setErrorMessage(error.response.data.message);
+    });
+  };
+  const signUp = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    
+    Api.post('/sign_up', {
+      name: signUpName,
+      email: signUpEmail,
+      password: signUpPassword,
+      confirmPassword: signUpConfirmPassword
+    }).then(resp => {
+      setSessionStorage(resp.data.userID, resp.data.name, resp.data.email, resp.data.token);
+      setUserName(resp.data.name)
+      setSignUpForm(false);
+      setWellcome(true);
+    }).catch(error => {
+      console.log(error)
+      setErrorType(error.response.data.type);
+      setErrorMessage(error.response.data.message);
+    });
+  };
+
+  useEffect(() => {
+    cleanSessionStorage()
+  }, []);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <>
+      <Header mobleNavOpen={false} page_title="">
+        {<></>}
+      </Header>
+      <Main>
+        <div className={`${!isloding && !wellcome? "w-full h-full max-w-[1200px] flex flex-col justify-center items-start align-middle gap-10 sm:grid-cols-2 sm:grid":"hidden"}`}>
+          <div id="login_form" className={`w-full h-full items-start flex ${signUpForm || isloding || wellcome? "hidden pointer-events-none":"block pointer-events-auto"} sm:block sm:pointer-events-auto animate-fade-in-up`}>
+            <Form action="/login" submit={login} legend="Login">
+              <div className="w-full justify-center items-center flex flex-col gap-14">
+                <div className="w-full flex flex-col gap-8">
+                  <Input value={loginEmail} type="email" name="login_email" placeholder="E-mail" icon={<></>} handle_change={(event: React.ChangeEvent<HTMLInputElement>) => setLoginEmail(event.target.value)} alert={errorType === "login_empyt_camp" || errorType === "not_found"} alert_message={<AlertMessage text={errorMessage}/>}/>
+                  <Input value={loginPassword} type="password" name="login_password" placeholder="Senha" icon={<></>} handle_change={(event: React.ChangeEvent<HTMLInputElement>) => setLoginPassword(event.target.value)} alert={errorType === "login_empyt_camp" || errorType === "different_pass"} alert_message={<AlertMessage text={errorMessage}/>}/>
+                </div>
+
+                <SubmitButton text="Entrar"/>
+
+                <small className="text-base text-samll_text sm:hidden sm:pointer-events-none">É novo por aqui? <a href="#" onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
+                  event.preventDefault();
+                  setLoginEmail('');
+                  setLoginPassword('');
+                  setErrorType('');
+                  setErrorMessage('');
+                  setSignUpForm(true);
+                }}
+                className="text-base text-main_colour cursor-pointer"
+                >Registre-se</a></small>
+              </div>
+            </Form>
+          </div>
+          
+          <div id="sign_up_form" className={`w-full h-full items-start flex ${signUpForm ? "block":"hidden"} sm:block ${signUpForm? "pointer-events-auto":"pointer-events-none"} sm:pointer-events-auto  animate-fade-in-up`}>
+            <Form action="/sign_up" submit={signUp} legend="Sign up">
+              <div className="w-full justify-center items-center flex flex-col gap-14">
+                <div className="w-full flex flex-col gap-8">
+                  <Input value={signUpName} type="text" name="sign_up_name" placeholder="Seu nome" icon={<></>} handle_change={(event: React.ChangeEvent<HTMLInputElement>) => setSignUpName(event.target.value)} alert={errorType === "sing_up_empyt_camp" || errorType === "name_length"} alert_message={<AlertMessage text={errorMessage}/>}/>
+                  <Input value={signUpEmail} type="email" name="sign_up_email" placeholder="Seu e-mail" icon={<></>} handle_change={(event: React.ChangeEvent<HTMLInputElement>) => setSignUpEmail(event.target.value)} alert={errorType === "sing_up_empyt_camp" || errorType === "email"} alert_message={<AlertMessage text={errorMessage}/>}/>
+                  <Input value={signUpPassword} type="password" name="sign_up_password" placeholder="Crie uma senha" icon={<></>} handle_change={(event: React.ChangeEvent<HTMLInputElement>) => setSignUpPassword(event.target.value)} alert={errorType === "sing_up_empyt_camp" || errorType === "pass_format" || errorType === "pass_confirmation"} alert_message={<AlertMessage text={errorMessage}/>}/>
+                  <Input value={signUpConfirmPassword} type="password" name="sign_up_confirm_password" placeholder="Confirme sua senha" icon={<></>} handle_change={(event: React.ChangeEvent<HTMLInputElement>) => setSignUpConfirmPassword(event.target.value)} alert={errorType === "sing_up_empyt_camp" || errorType === "pass_confirmation"} alert_message={<AlertMessage text={errorMessage}/>}/>
+                </div>
+
+                <SubmitButton text="Registrar-se"/>
+
+                <small className="text-base text-samll_text sm:hidden sm:pointer-events-none">Já possui conta? <a href="#" onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
+                  event.preventDefault();
+                  setSignUpName('');
+                  setSignUpEmail('');
+                  setSignUpPassword('');
+                  setSignUpConfirmPassword('');
+                  setErrorType('');
+                  setErrorMessage('');
+                  setSignUpForm(false);
+                }}
+                className="text-base text-main_colour cursor-pointer"
+                >Entrar</a></small>
+              </div>
+            </Form>
+          </div>
         </div>
-      </div>
+        
+        <div className={`w-full h-full ${isloding || wellcome ? "flex  flex-col justify-center items-center":"hidden"}`}>
+          <div className={`${!signUpForm && isloding ? "flex flex-col gap-24 justify-center items-center":"hidden"}`}>
+            <h1 className="text-3xl text-titles_colour font-sans font-normal text-center animate-fade-in-up">Bom te ver novamente, {userName}</h1>
+            <Checkmark diameter={100}/>
+            </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+            <div className={`w-full ${!signUpForm && !isloding && wellcome? "flex flex-col gap-24 justify-center items-center animate-slide-in-from-right":"hidden"}`}>
+              <div className="w-full flex flex-col gap-5 justify-center items-center">
+                <h1 className="text-3xl text-titles_colour font-sans font-normal text-center">Bem-vindo&#40;a&#41; ao yNotes, {userName}!</h1>
+                <small className="text-base text-placeholder font-sans font-normal text-center">Começe a criar suas primeiras anotações</small>
+              </div>
+              <button onClick={() => router.push('/my_notes')} className="text-2xl text-main_colour text-center p-4 border-2 border-main_colour rounded-lg">Ir para minha conta</button>
+              <button onClick={() =>{
+                setWellcome(false);
+              }} className="text-2xl text-titles_colour text-center p-4 border-b-2 border-titles_colour">Voltar ao Login</button>
+            </div>
+        </div>
+      </Main>
+    </>
   );
-}
+};

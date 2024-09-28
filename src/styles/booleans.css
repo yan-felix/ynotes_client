@@ -1,0 +1,29 @@
+.boolean{
+    display: flex;
+    flex-direction: row;
+    gap: 0.8rem;
+    color: #7C7777;
+    font-family: Istok Web;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+}
+
+
+.boolean input[type="radio"]{
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    stroke: #9D9D9D;
+    border-radius: 1.5rem;
+}
+
+.boolean input[type="radio"]:checked::before{
+    content: "";
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    stroke: #9D9D9D;
+    background: #FF4D00;
+    border-radius: 1.5rem;
+}
