@@ -5,7 +5,7 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
     token?: string;
 };
 
-const BASE_URL = 'http://localhost:3030';
+const BASE_URL = 'https://ynotes-server.onrender.com';
 
 const Api: AxiosInstance = axios.create({
     baseURL: BASE_URL,
