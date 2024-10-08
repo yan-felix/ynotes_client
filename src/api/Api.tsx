@@ -10,7 +10,6 @@ const BASE_URL = 'https://ynotes-server.onrender.com';
 const Api: AxiosInstance = axios.create({
     baseURL: BASE_URL,
     headers: { 'Content-Type': 'application/json'},
-    withCredentials: true,
 });
 
 Api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -22,7 +21,7 @@ Api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   };
   
   if (userID) {
-    config.headers.set('User-ID', userID);
+    config.headers.set('user-id', userID);
   };
   if (token) {
       config.headers.set('token', token);
