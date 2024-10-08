@@ -5,6 +5,37 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
     token?: string;
 };
 
+const Api: AxiosInstance = axios.create({
+    baseURL: 'https://chaty-server.onrender.com',
+    headers: { 'Content-Type': 'application/json'},
+});
+
+Api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    const userID = sessionStorage.getItem("userID");
+    const token = sessionStorage.getItem("token");
+  
+    if (!config.headers) {
+      config.headers = new AxiosHeaders();
+    };
+    
+    config.headers.set('User-ID', `${userID}`);
+    config.headers.set('Authorization', `${token}`);
+  
+    return config;
+  }, (error) => {
+    return Promise.reject(error);
+  });
+
+export default Api
+
+/*
+import axios, { AxiosHeaders, AxiosRequestConfig, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+
+interface CustomAxiosRequestConfig extends AxiosRequestConfig {
+    userID?: string | null;
+    token?: string;
+};
+
 const BASE_URL = 'https://ynotes-server.onrender.com';
 
 const Api: AxiosInstance = axios.create({
@@ -32,3 +63,4 @@ Api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 export default Api
+*/
